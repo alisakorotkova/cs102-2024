@@ -52,7 +52,7 @@ def get_row(grid: tp.List[tp.List[str]], pos: tp.Tuple[int, int]) -> tp.List[str
     >>> get_row([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']], (2, 0))
     ['.', '8', '9']
     """
-    return [row for row in grid[pos[0]]]
+    return grid[pos[0]]
 
 
 def get_col(grid: tp.List[tp.List[str]], pos: tp.Tuple[int, int]) -> tp.List[str]:
@@ -95,10 +95,10 @@ def find_empty_positions(grid: tp.List[tp.List[str]]) -> tp.Optional[tp.Tuple[in
     >>> find_empty_positions([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']])
     (2, 0)
     """
-    for row in range(len(grid)):
-        for col in range(len(grid)):
-            if grid[row][col] == ".":
-                return row, col
+    for i, row in enumerate(grid):
+        for j, cell in enumerate(row):
+            if cell == ".":
+                return i, j
     return None
 
 
@@ -154,17 +154,17 @@ def check_solution(solution: tp.List[tp.List[str]]) -> bool:
     True
     """
 
-    for row in range(len(solution)):
-        if set(solution[row]) != set("123456789"):
+    for i, row in enumerate(solution):
+        if set(solution[i]) != set("123456789"):
             return False
 
-    for col in range(len(solution)):
-        if set(get_col(solution, (0, col))) != set("123456789"):
+    for j, col in enumerate(solution):
+        if set(get_col(solution, (0, j))) != set("123456789"):
             return False
 
-    for row in range(len(solution), 3):
-        for col in range(len(solution), 3):
-            block = set(get_block(solution, (row, col)))
+    for i, row in enumerate(solution):
+        for j, col in enumerate(solution):
+            block = set(get_block(solution, (i, j)))
             if block != set("123456789"):
                 return False
 
@@ -192,16 +192,22 @@ def generate_sudoku(n: int) -> tp.List[tp.List[str]]:
     >>> check_solution(solution)
     True
     """
-    g = solve([["."] * 9 for _ in range(9)])
-    n = 81 - min(n, 81)
+    grid = [["." for _ in range(9)] for _ in range(9)]
+    n = min(n, 81)
 
-    while n > 0:
+    for _ in range(n):
         row, col = random.randint(0, 8), random.randint(0, 8)
-        if g[row][col] != ".":
-            g[row][col] = "."
-            n -= 1
+        while grid[row][col] != ".":
+            row, col = random.randint(0, 8), random.randint(0, 8)
+        possible_values = find_possible_values(grid, (row, col))
+        while possible_values:
+            value = possible_values.pop()
+            grid[row][col] = value
+            if solve([row[:] for row in grid]):
+                break
+            grid[row][col] = "."
 
-    return g
+    return grid
 
 
 if __name__ == "__main__":
