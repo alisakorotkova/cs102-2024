@@ -52,6 +52,7 @@ def get_row(grid: tp.List[tp.List[str]], pos: tp.Tuple[int, int]) -> tp.List[str
     >>> get_row([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']], (2, 0))
     ['.', '8', '9']
     """
+
     return grid[pos[0]]
 
 
@@ -95,6 +96,7 @@ def find_empty_positions(grid: tp.List[tp.List[str]]) -> tp.Optional[tp.Tuple[in
     >>> find_empty_positions([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']])
     (2, 0)
     """
+
     for i, row in enumerate(grid):
         for j, cell in enumerate(row):
             if cell == ".":
@@ -192,6 +194,7 @@ def generate_sudoku(n: int) -> tp.List[tp.List[str]]:
     >>> check_solution(solution)
     True
     """
+
     grid = [["." for _ in range(9)] for _ in range(9)]
     n = min(n, 81)
 
@@ -206,15 +209,14 @@ def generate_sudoku(n: int) -> tp.List[tp.List[str]]:
             if solve([row[:] for row in grid]):
                 break
             grid[row][col] = "."
-
     return grid
 
 
 if __name__ == "__main__":
     for fname in ["puzzle1.txt", "puzzle2.txt", "puzzle3.txt"]:
-        gridd = read_sudoku(fname)
-        display(gridd)
-        solution = solve(gridd)
+        grid_ = read_sudoku(fname)
+        display(grid_)
+        solution = solve(grid_)
         if not solution:
             print(f"Puzzle {fname} can't be solved")
         else:
