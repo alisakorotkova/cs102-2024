@@ -2,6 +2,7 @@
     Решение лабиринта
 """
 
+import logging
 from random import choice, randint
 from typing import List, Optional, Tuple, Union
 
@@ -121,32 +122,52 @@ def shortest_path(
     :param exit_coord:
     :return:
     """
-    k = 0
     x, y = exit_coord
-    while grid[x][y] == 0:
-        k += 1
-        grid = make_step(grid, k)
+    rows = len(grid)
+    cols = len(grid[0])
+
+    # Проверка на корректность координат выхода
+    if not (0 <= x < rows and 0 <= y < cols):
+        logging.error(f"shortest_path: Invalid exit coordinates: {exit_coord}")
+        return None
+
+    # Получение числа шагов из ячейки выхода
+    try:
+        k = int(grid[x][y])
+    except (TypeError, ValueError) as e:
+        logging.error(f"shortest_path: TypeError or ValueError. Invalid element type. Message: {e}")
+        return None
+    path_len = k
 
     path = [exit_coord]
-    k = int(grid[x][y])
-    while grid[x][y] != 1 and k > 0:
-        if x + 1 < len(grid) and grid[x + 1][y] == k - 1:
-            path.append((x + 1, y))
-            x += 1
-        elif x - 1 >= 0 and grid[x - 1][y] == k - 1:
-            path.append((x - 1, y))
-            x -= 1
-        elif y + 1 < len(grid[0]) and grid[x][y + 1] == k - 1:
-            path.append((x, y + 1))
-            y += 1
-        elif y - 1 >= 0 and grid[x][y - 1] == k - 1:
-            path.append((x, y - 1))
-            y -= 1
-        k -= 1
+    current = exit_coord
 
-    if len(path) != grid[exit_coord[0]][exit_coord[1]]:
-        grid[path[-1][0]][path[-1][1]] = " "
-        shortest_path(grid, exit_coord)
+    # Направление движения: вверх, вниз, влево, вправо
+    directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+
+    while k != 1:
+        found_next = False
+        for dx, dy in directions:
+            nx, ny = current[0] + dx, current[1] + dy  # координаты соседней ячейки
+            if 0 <= nx < rows and 0 <= ny < cols:  # проверка границ
+                try:
+                    if grid[nx][ny] == k - 1:  # проверка значения соседней ячейки
+                        path.append((nx, ny))
+                        current = (nx, ny)  # устанавливаем новую текущую позицию
+                        k -= 1  # переходим на следующий шаг
+                        found_next = True  # нашли следующую ячейку
+                        break  # переходим к следующей итерации цикла while
+                except (TypeError, ValueError) as e:
+                    logging.error(f"shortest_path: TypeError or ValueError when accessing neighbour. Message: {e}")
+                    return None
+
+        if not found_next:  # если не нашли соседнюю ячейку, то пути нет
+            logging.warning(f"shortest_path: Path not found")
+            return None
+
+    if len(path) != path_len:
+        logging.error(f"shortest_path: Path length {len(path)} doesn't match expected length {path_len}")
+        return None  # Если длина пути не соответствует ожидаемой то возвращаем None
 
     return path
 
@@ -225,18 +246,29 @@ def add_path_to_grid(
     """
 
     if path:
-        for i, row in enumerate(grid):
-            for j, _ in enumerate(row):
-                if (i, j) in path:
-                    grid[i][j] = "X"
-        for i, row in enumerate(grid):
-            for j, _ in enumerate(row):
-                if isinstance(grid[i][j], int):
-                    grid[i][j] = " "
+        try:
+            if isinstance(path, tuple):
+                path = [path]  # Преобразуем кортеж в список
+
+            for i, row in enumerate(grid):
+                for j, _ in enumerate(row):
+                    if (i, j) in path:
+                        grid[i][j] = "X"
+
+            for i, row in enumerate(grid):
+                for j, _ in enumerate(row):
+                    if isinstance(grid[i][j], int):
+                        grid[i][j] = " "
+        except TypeError as e:
+            logging.error(f"add_path_to_grid: TypeError. Message: {e}")
+        except Exception as e:
+            logging.error(f"add_path_to_grid: Error. Message: {e}")
+
     return grid
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.ERROR)
     print(pd.DataFrame(bin_tree_maze(15, 15)))
     GRID = bin_tree_maze(15, 15)
     print(pd.DataFrame(GRID))

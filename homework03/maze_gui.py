@@ -1,4 +1,5 @@
 import tkinter as tk
+from copy import deepcopy
 from tkinter import messagebox, ttk
 from typing import List
 
@@ -21,7 +22,7 @@ def draw_maze(grid: List[List[str | int]], size: int = 10):
             elif cell == "■":
                 color = "black"
             elif cell == "X":
-                color = "blue"
+                color = "pink"
             draw_cell(y, x, color, size)
 
 
@@ -34,12 +35,23 @@ def show_solution():
         tk.messagebox.showinfo("Message", "No solutions")
 
 
+def is_solvable(n: int, m: int):
+    """Generating solvable grid"""
+    while True:
+        grid = bin_tree_maze(n, m)
+        copied_greed = deepcopy(grid)
+        _, path = solve_maze(copied_greed)
+        if path:
+            return grid
+
+
 if __name__ == "__main__":
     global GRID, CELL_SIZE
     N, M = 51, 77
 
     CELL_SIZE = 10
     GRID = bin_tree_maze(N, M)
+    GRID = is_solvable(N, M)
 
     window = tk.Tk()
     window.title("Maze")
@@ -47,7 +59,6 @@ if __name__ == "__main__":
 
     canvas = tk.Canvas(window, width=M * CELL_SIZE, height=N * CELL_SIZE)
     canvas.pack()
-
     draw_maze(GRID, CELL_SIZE)
     ttk.Button(window, text="Solve", command=show_solution).pack(pady=20)
 
